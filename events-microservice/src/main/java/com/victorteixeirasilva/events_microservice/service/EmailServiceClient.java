@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "email-service", url = "http://localhost:8081/api/email")
 public interface EmailServiceClient {
 
-    @PostMapping("/send")
+    @PostMapping
     void sendEmail(@RequestBody EmailRequestDTO emailRequest);
 }

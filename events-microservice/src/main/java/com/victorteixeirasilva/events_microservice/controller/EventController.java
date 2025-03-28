@@ -3,10 +3,14 @@ package com.victorteixeirasilva.events_microservice.controller;
 import com.victorteixeirasilva.events_microservice.domain.dto.SubscriptionRequestDTO;
 import com.victorteixeirasilva.events_microservice.domain.dto.request.EventRequestDTO;
 import com.victorteixeirasilva.events_microservice.domain.entity.Event;
+import com.victorteixeirasilva.events_microservice.exceptions.EventFullException;
+import com.victorteixeirasilva.events_microservice.exceptions.EventsIsEmptyException;
+import com.victorteixeirasilva.events_microservice.exceptions.SubscriptionEventException;
 import com.victorteixeirasilva.events_microservice.service.EventService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +31,12 @@ public class EventController {
                     "Retorna uma lista de todos os eventos cadastrados!"
     )
     @GetMapping
-    public List<Event> getAllEvents(){
-        return eventService.getAllEvents();
+    public ResponseEntity getAllEvents(){
+        try {
+            return ResponseEntity.ok(eventService.getAllEvents());
+        } catch (EventsIsEmptyException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @Operation(
@@ -38,8 +46,12 @@ public class EventController {
                     "Retorna uma lista de todos os eventos cadastrados que tem uma data maior do que a data atual!"
     )
     @GetMapping("/upComming")
-    public List<Event> getUpCommingEvents(){
-        return eventService.getUpComingEvents();
+    public ResponseEntity getUpCommingEvents(){
+        try {
+            return ResponseEntity.ok(eventService.getUpComingEvents());
+        } catch (EventsIsEmptyException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @Operation(
@@ -49,8 +61,12 @@ public class EventController {
                     "Retorna o evento criado!"
     )
     @PostMapping
-    public Event createEvent(@RequestBody EventRequestDTO eventRequestDTO){
-        return eventService.createEvent(eventRequestDTO);
+    public ResponseEntity createEvent(@RequestBody EventRequestDTO eventRequestDTO){
+        try {
+            return ResponseEntity.ok(eventService.createEvent(eventRequestDTO));
+        } catch (InternalError e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
     @Operation(
@@ -60,9 +76,15 @@ public class EventController {
                     "Retorna se o participante foi registrado!"
     )
     @PostMapping("/{eventId}/register")
-    public ResponseEntity<String> registerParticipant(@PathVariable String eventId, @RequestBody SubscriptionRequestDTO subscriptionRequestDTO){
-       eventService.registerParticipant(eventId, subscriptionRequestDTO.participantEmail());
-       return ResponseEntity.ok("Participante Registrado Corretamente");
+    public ResponseEntity registerParticipant(@PathVariable String eventId, @RequestBody SubscriptionRequestDTO subscriptionRequestDTO){
+        try {
+            eventService.registerParticipant(eventId, subscriptionRequestDTO.participantEmail());
+            return ResponseEntity.ok("Participante Registrado Corretamente");
+        } catch (EventFullException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (SubscriptionEventException | InternalError e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
     }
 
 

@@ -7,6 +7,7 @@ import com.victorteixeirasilva.events_microservice.domain.entity.Subscription;
 import com.victorteixeirasilva.events_microservice.exceptions.EventFullException;
 import com.victorteixeirasilva.events_microservice.exceptions.EventNotFoundException;
 import com.victorteixeirasilva.events_microservice.exceptions.EventsIsEmptyException;
+import com.victorteixeirasilva.events_microservice.exceptions.SubscriptionEventException;
 import com.victorteixeirasilva.events_microservice.repository.EventRepository;
 import com.victorteixeirasilva.events_microservice.repository.SubscriptionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class EventService {
 
     public List<Event> getUpComingEvents() {
         if (eventRepository.findUpcomingEvents(LocalDateTime.now()).isEmpty()) {
-            throw new EventsIsEmptyException();
+            throw new EventsIsEmptyException("Não existe nenhum evento que ainda esteja para acontecer!");
         }
         return eventRepository.findUpcomingEvents(LocalDateTime.now());
     }
@@ -62,7 +63,7 @@ public class EventService {
             Subscription subscription = new Subscription(event, participantEmail);
             subscriptionRepository.save(subscription);
         } catch (Exception e) {
-            throw new InternalError("Não foi possivel cadastrar a subscription no evento.", e.getCause());
+            throw new SubscriptionEventException(e.getCause());
         }
 
         event.setRegisteredParticipantes(event.getRegisteredParticipantes() + 1);
